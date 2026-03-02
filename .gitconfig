@@ -1,0 +1,44 @@
+[user]
+    name = Seu Nome
+    email = seu.email@example.com
+
+[core]
+    autocrlf = true
+    safecrlf = true
+    excludesfile = .gitignore
+
+[push]
+    default = current
+
+[pull]
+    rebase = false
+
+[branch]
+    autosetuprebase = always
+
+[diff]
+    tool = vscode
+
+[difftool "vscode"]
+    cmd = code --wait --diff $LOCAL $REMOTE
+
+[merge]
+    tool = vscode
+
+[mergetool "vscode"]
+    cmd = code --wait $MERGED
+
+[fetch]
+    prune = true
+
+[alias]
+    st = status
+    co = checkout
+    br = branch
+    ci = commit
+    unstage = reset HEAD --
+    last = log -1 HEAD
+    visual = log --graph --oneline --all
+    amend = commit --amend --no-edit
+    undo = reset --soft HEAD~1
+
