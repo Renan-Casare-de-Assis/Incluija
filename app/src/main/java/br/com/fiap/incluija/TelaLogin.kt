@@ -18,7 +18,8 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun TelaLogin(
-    onNavigateToCadastro: () -> Unit = {}
+    onNavigateToCadastro: () -> Unit = {},
+    onNavigateToHome: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
@@ -150,7 +151,7 @@ fun TelaLogin(
 
                     // Botão "Entrar"
                     Button(
-                        onClick = { /* TODO */ },
+                        onClick = { onNavigateToHome() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),

@@ -6,5 +6,6 @@ package br.com.fiap.incluija.navigation
 sealed class NavRoutes(val route: String) {
     object Login : NavRoutes("login")
     object Cadastro : NavRoutes("cadastro")
+    object Home : NavRoutes("home")
 }
 

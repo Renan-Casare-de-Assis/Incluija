@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import br.com.fiap.incluija.TelaLogin
 import br.com.fiap.incluija.TelaCadastro
+import br.com.fiap.incluija.TelaHome
 
 /**
  * Configura a navegação principal do app
@@ -23,6 +24,11 @@ fun AppNavigation(
             TelaLogin(
                 onNavigateToCadastro = {
                     navController.navigate(NavRoutes.Cadastro.route)
+                },
+                onNavigateToHome = {
+                    navController.navigate(NavRoutes.Home.route) {
+                        popUpTo(NavRoutes.Login.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -30,9 +36,15 @@ fun AppNavigation(
         composable(route = NavRoutes.Cadastro.route) {
             TelaCadastro(
                 onNavigateBack = {
-                    navController.popBackStack()
+                    navController.navigate(NavRoutes.Login.route) {
+                        popUpTo(NavRoutes.Login.route) { inclusive = true }
+                    }
                 }
             )
+        }
+
+        composable(route = NavRoutes.Home.route) {
+            TelaHome()
         }
     }
 }
