@@ -26,7 +26,9 @@ private val GrayText = Color(0xFF757575)
 private val GrayDark = Color(0xFF424242)
 
 @Composable
-fun TelaCadastro() {
+fun TelaCadastro(
+    onNavigateBack: () -> Unit = {}
+) {
     var nomeCompleto by remember { mutableStateOf("") }
     var cpf by remember { mutableStateOf("") }
     var nascimento by remember { mutableStateOf("") }
@@ -57,7 +59,8 @@ fun TelaCadastro() {
                     text = "Voltar",
                     color = Color.White,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal
+                    fontWeight = FontWeight.Normal,
+                    modifier = Modifier.clickable { onNavigateBack() }
                 )
             }
 

@@ -1,6 +1,7 @@
 package br.com.fiap.incluija
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -16,7 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun TelaLogin() {
+fun TelaLogin(
+    onNavigateToCadastro: () -> Unit = {}
+) {
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
 
@@ -179,7 +182,8 @@ fun TelaLogin() {
                             text = "Criar gratuitamente",
                             fontSize = 14.sp,
                             color = Color(0xFFFF9966),
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable { onNavigateToCadastro() }
                         )
                     }
                 }
