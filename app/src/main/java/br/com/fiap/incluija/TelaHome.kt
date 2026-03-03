@@ -47,7 +47,7 @@ data class BottomNavItem(
 )
 
 @Composable
-fun Home() {
+fun TelaHome() {
     var selectedFilter by remember { mutableStateOf("Todas") }
     var selectedNavItem by remember { mutableStateOf("Início") }
 
@@ -467,6 +467,6 @@ fun BottomNavItemView(
 
 @Preview(showBackground = true)
 @Composable
-fun HomePreview() {
-    Home()
+fun TelaHomePreview() {
+    TelaHome()
 }
