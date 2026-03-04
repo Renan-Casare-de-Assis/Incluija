@@ -159,7 +159,7 @@ fun TelaCadastro(
                     .padding(horizontal = 24.dp)
                     .padding(bottom = 24.dp)
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
                     text = "DADOS PESSOAIS",
@@ -274,7 +274,7 @@ fun TelaCadastro(
                     errorMessage = cidadeError
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
                     text = "PERFIL DE VULNERABILIDADE",
@@ -284,7 +284,7 @@ fun TelaCadastro(
                     letterSpacing = 0.5.sp
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
                     text = "Selecione o que se aplica a voce:",
@@ -292,7 +292,7 @@ fun TelaCadastro(
                     color = GrayDark
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -318,6 +318,14 @@ fun TelaCadastro(
                                 perfilError = null
                             }
                         )
+                        SelectableChip(
+                            text = "Indigena",
+                            isSelected = selectedChips.contains("Indigena"),
+                            onSelected = {
+                                selectedChips = toggleChip(selectedChips, "Indigena")
+                                perfilError = null
+                            }
+                        )
                     }
 
                     Row(
@@ -337,28 +345,6 @@ fun TelaCadastro(
                             isSelected = selectedChips.contains("LGBTQIA+"),
                             onSelected = {
                                 selectedChips = toggleChip(selectedChips, "LGBTQIA+")
-                                perfilError = null
-                            }
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SelectableChip(
-                            text = "Quilombola",
-                            isSelected = selectedChips.contains("Quilombola"),
-                            onSelected = {
-                                selectedChips = toggleChip(selectedChips, "Quilombola")
-                                perfilError = null
-                            }
-                        )
-                        SelectableChip(
-                            text = "Indigena",
-                            isSelected = selectedChips.contains("Indigena"),
-                            onSelected = {
-                                selectedChips = toggleChip(selectedChips, "Indigena")
                                 perfilError = null
                             }
                         )
@@ -382,7 +368,7 @@ fun TelaCadastro(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(72.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Button(
                     onClick = {

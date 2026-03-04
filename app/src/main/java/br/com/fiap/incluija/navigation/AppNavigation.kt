@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import br.com.fiap.incluija.TelaLogin
 import br.com.fiap.incluija.TelaCadastro
 import br.com.fiap.incluija.TelaHome
+import br.com.fiap.incluija.TelaPerfil
 
 /**
  * Configura a navegação principal do app
@@ -44,8 +45,19 @@ fun AppNavigation(
         }
 
         composable(route = NavRoutes.Home.route) {
-            TelaHome()
+            TelaHome(
+                onNavigation = { route ->
+                    navController.navigate(route) {
+                        popUpTo(NavRoutes.Home.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+
+        composable(route = NavRoutes.Perfil.route) {
+            TelaPerfil()
         }
     }
 }
-

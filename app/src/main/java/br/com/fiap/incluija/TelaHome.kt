@@ -1,6 +1,5 @@
 package br.com.fiap.incluija
 
-import android.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -29,7 +27,6 @@ private val BeigeBackground = Color(0xFFF5EFE9)
 private val GrayLight = Color(0xFFE8E8E8)
 private val GrayText = Color(0xFF757575)
 private val GrayDark = Color(0xFF424242)
-private val DarkHeader = Color(0xFF2C2C2C)
 
 // Data classes para o estado
 data class Job(
@@ -47,7 +44,9 @@ data class BottomNavItem(
 )
 
 @Composable
-fun TelaHome() {
+fun TelaHome(
+    onNavigation: (String) -> Unit = {}
+) {
     var selectedFilter by remember { mutableStateOf("Todas") }
     var selectedNavItem by remember { mutableStateOf("Início") }
 
@@ -90,7 +89,8 @@ fun TelaHome() {
         bottomBar = {
             BottomNavigationBar(
                 items = navItems,
-                onItemClick = { selectedNavItem = it }
+                onItemClick = { selectedNavItem = it },
+                onNavigation = onNavigation
             )
         }
     ) { paddingValues ->
@@ -409,7 +409,8 @@ fun JobTag(text: String) {
 @Composable
 fun BottomNavigationBar(
     items: List<BottomNavItem>,
-    onItemClick: (String) -> Unit
+    onItemClick: (String) -> Unit,
+    onNavigation: (String) -> Unit = {}
 ) {
     Surface(
         shadowElevation = 8.dp,
@@ -426,7 +427,12 @@ fun BottomNavigationBar(
             items.forEach { item ->
                 BottomNavItemView(
                     item = item,
-                    onClick = { onItemClick(item.label) }
+                    onClick = { onItemClick(item.label) },
+                    onNavigateToPerfil = {
+                        if (item.label == "Perfil") {
+                            onNavigation("perfil")
+                        }
+                    }
                 )
             }
         }
@@ -436,7 +442,8 @@ fun BottomNavigationBar(
 @Composable
 fun BottomNavItemView(
     item: BottomNavItem,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onNavigateToPerfil: () -> Unit = {}
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -445,7 +452,12 @@ fun BottomNavItemView(
             .width(60.dp)
     ) {
         IconButton(
-            onClick = onClick,
+            onClick = {
+                onClick()
+                if (item.label == "Perfil") {
+                    onNavigateToPerfil()
+                }
+            },
             modifier = Modifier.size(32.dp)
         ) {
             Icon(
