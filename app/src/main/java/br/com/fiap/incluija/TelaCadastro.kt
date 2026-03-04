@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -32,6 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +47,8 @@ private val GrayText = Color(0xFF757575)
 private val GrayDark = Color(0xFF424242)
 private val ErrorRed = Color(0xFFB00020)
 
+
+
 @Composable
 fun TelaCadastro(
     onNavigateBack: () -> Unit = {}
@@ -52,8 +57,13 @@ fun TelaCadastro(
     var cpf by remember { mutableStateOf("") }
     var nascimento by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var senha by remember { mutableStateOf("") }
+    var repetirSenha by remember { mutableStateOf("") }
     var telefone by remember { mutableStateOf("") }
     var cidade by remember { mutableStateOf("") }
+
+    var senhaVisivel by remember { mutableStateOf(false) }
+    var repetirSenhaVisivel by remember { mutableStateOf(false) }
 
     var selectedChips by remember { mutableStateOf(setOf<String>()) }
 
@@ -62,6 +72,8 @@ fun TelaCadastro(
     var cpfError by remember { mutableStateOf<String?>(null) }
     var nascimentoError by remember { mutableStateOf<String?>(null) }
     var emailError by remember { mutableStateOf<String?>(null) }
+    var senhaError by remember { mutableStateOf<String?>(null) }
+    var repetirSenhaError by remember { mutableStateOf<String?>(null) }
     var telefoneError by remember { mutableStateOf<String?>(null) }
     var cidadeError by remember { mutableStateOf<String?>(null) }
     var perfilError by remember { mutableStateOf<String?>(null) }
@@ -75,6 +87,8 @@ fun TelaCadastro(
         cpfError = validateCpf(cpf)
         nascimentoError = if (nascimento.isBlank()) "Nascimento e obrigatorio." else null
         emailError = validateEmail(email)
+        senhaError = if (senha.isBlank()) "Senha e obrigatoria." else null
+        repetirSenhaError = if (repetirSenha.isBlank()) "Repetir senha e obrigatorio." else null
         telefoneError = validateTelefone(telefone)
         cidadeError = validateCidade(cidade)
         perfilError = if (selectedChips.isEmpty()) {
@@ -88,6 +102,8 @@ fun TelaCadastro(
             cpfError,
             nascimentoError,
             emailError,
+            senhaError,
+            repetirSenhaError,
             telefoneError,
             cidadeError,
             perfilError
@@ -204,6 +220,34 @@ fun TelaCadastro(
                     },
                     placeholder = "E-mail",
                     errorMessage = emailError
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                CustomPasswordField(
+                    value = senha,
+                    onValueChange = {
+                        senha = it
+                        senhaError = null
+                    },
+                    placeholder = "Senha",
+                    isPasswordVisible = senhaVisivel,
+                    onVisibilityToggle = { senhaVisivel = !senhaVisivel },
+                    errorMessage = senhaError
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                CustomPasswordField(
+                    value = repetirSenha,
+                    onValueChange = {
+                        repetirSenha = it
+                        repetirSenhaError = null
+                    },
+                    placeholder = "Repetir Senha",
+                    isPasswordVisible = repetirSenhaVisivel,
+                    onVisibilityToggle = { repetirSenhaVisivel = !repetirSenhaVisivel },
+                    errorMessage = repetirSenhaError
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -408,26 +452,14 @@ private fun validateCidade(cidade: String): String? {
     return null
 }
 
-@Composable
-fun ProgressIndicatorBar(
-    isActive: Boolean,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .height(4.dp)
-            .clip(RoundedCornerShape(2.dp))
-            .background(if (isActive) OrangePrimary else GrayLight)
-    )
-}
 
 @Composable
 fun CustomTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    errorMessage: String? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    errorMessage: String? = null
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         OutlinedTextField(
@@ -442,6 +474,61 @@ fun CustomTextField(
             },
             modifier = Modifier.fillMaxWidth(),
             isError = errorMessage != null,
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White,
+                unfocusedBorderColor = if (errorMessage != null) ErrorRed else GrayLight,
+                focusedBorderColor = if (errorMessage != null) ErrorRed else OrangePrimary,
+                unfocusedTextColor = GrayDark,
+                focusedTextColor = GrayDark
+            ),
+            shape = RoundedCornerShape(16.dp),
+            singleLine = true
+        )
+
+        if (errorMessage != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = errorMessage,
+                color = ErrorRed,
+                fontSize = 12.sp
+            )
+        }
+    }
+}
+
+@Composable
+fun CustomPasswordField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    isPasswordVisible: Boolean,
+    onVisibilityToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+    errorMessage: String? = null
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    color = GrayText,
+                    fontSize = 14.sp
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            isError = errorMessage != null,
+            visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = onVisibilityToggle) {
+                    Text(
+                        text = if (isPasswordVisible) "👁️" else "👁️‍🗨️",
+                        fontSize = 18.sp
+                    )
+                }
+            },
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedContainerColor = Color.White,
                 focusedContainerColor = Color.White,
