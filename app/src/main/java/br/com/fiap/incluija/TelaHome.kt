@@ -34,8 +34,20 @@ data class Job(
     val company: String,
     val salary: String,
     val tags: List<String>,
-    val icon: String
+    val icon: String,
+    val category: String
 )
+
+/**
+ * Filtra a lista de jobs baseado na categoria selecionada
+ */
+fun filterJobs(jobs: List<Job>, selectedFilter: String): List<Job> {
+    return if (selectedFilter == "Todas") {
+        jobs
+    } else {
+        jobs.filter { it.category == selectedFilter }
+    }
+}
 
 data class BottomNavItem(
     val label: String,
@@ -58,21 +70,24 @@ fun TelaHome(
             company = "Mercadão Brasil",
             salary = "R\$1.600",
             tags = listOf("CLT", "Presencial", "PcD"),
-            icon = "🏪"
+            icon = "🏪",
+            category = "CLT"
         ),
         Job(
             title = "Auxiliar Administrativo",
             company = "TechImpulso",
             salary = "R\$1.900",
             tags = listOf("Remoto", "PJ"),
-            icon = "💻"
+            icon = "💻",
+            category = "Remoto"
         ),
         Job(
             title = "Auxiliar de Cozinha",
             company = "Restaurante Sabor",
             salary = "R\$1.412",
             tags = listOf("CLT", "Migrante"),
-            icon = "👨‍🍳"
+            icon = "👨‍🍳",
+            category = "CLT"
         )
     )
 
@@ -130,7 +145,7 @@ fun TelaHome(
             }
 
             // Lista de Vagas
-            items(jobs) { job ->
+            items(filterJobs(jobs, selectedFilter)) { job ->
                 JobCard(job = job)
             }
 
