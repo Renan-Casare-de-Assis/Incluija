@@ -1,6 +1,7 @@
 package br.com.fiap.incluija
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -14,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +29,14 @@ private val BeigeBackground = Color(0xFFF5EFE9)
 private val GrayLight = Color(0xFFE8E8E8)
 private val GrayText = Color(0xFF757575)
 private val GrayDark = Color(0xFF424242)
+
+// Gradiente colorido (igual à TelaLogin, TelaCadastro e TelaCandidaturas)
+private val gradientColors = listOf(
+    Color(0xFFFFBD59), // Laranja/Amarelo
+    Color(0xFFE94057), // Rosa/Vermelho
+    Color(0xFF8A2387)  // Roxo
+)
+private val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
 
 // Data classes para o estado
 data class Job(
@@ -57,7 +67,8 @@ data class BottomNavItem(
 
 @Composable
 fun TelaHome(
-    onNavigation: (String) -> Unit = {}
+    onNavigation: (String) -> Unit = {},
+    onNavigateToCandidaturas: () -> Unit = {}
 ) {
     var selectedFilter by remember { mutableStateOf("Todas") }
     var selectedNavItem by remember { mutableStateOf("Início") }
@@ -121,7 +132,7 @@ fun TelaHome(
 
             // Cards de Resumo
             item {
-                SummaryCardsSection()
+                SummaryCardsSection(onNavigateToCandidaturas = onNavigateToCandidaturas)
             }
 
             // Título "Vagas em destaque"
@@ -163,7 +174,7 @@ fun HeaderSection() {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = OrangePrimary,
+                brush = horizontalGradient,
                 shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
             .padding(horizontal = 24.dp, vertical = 20.dp)
@@ -172,7 +183,7 @@ fun HeaderSection() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "🤝",
+                text = "",
                 fontSize = 24.sp,
                 modifier = Modifier.padding(end = 8.dp)
             )
@@ -188,7 +199,7 @@ fun HeaderSection() {
 }
 
 @Composable
-fun SummaryCardsSection() {
+fun SummaryCardsSection(onNavigateToCandidaturas: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -199,6 +210,7 @@ fun SummaryCardsSection() {
             icon = "📊",
             number = "1.240",
             label = "Vagas abertas hoje",
+            isGradient = true,
             backgroundColor = OrangePrimary,
             textColor = Color.White,
             modifier = Modifier.weight(1f)
@@ -206,11 +218,13 @@ fun SummaryCardsSection() {
 
         SummaryCard(
             icon = "🎯",
-            number = "18",
-            label = "Vagas para seu perfil",
+            number = " 3",
+            label = "Minhas candidaturas",
+            isGradient = false,
             backgroundColor = GrayLight,
             textColor = GrayDark,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            onClick = onNavigateToCandidaturas
         )
     }
 }
@@ -222,14 +236,17 @@ fun SummaryCard(
     label: String,
     backgroundColor: Color,
     textColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isGradient: Boolean = false,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = modifier
-            .height(140.dp),
+            .height(140.dp)
+            .clickable(enabled = true) { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
+            containerColor = if (isGradient) Color.Transparent else backgroundColor
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
@@ -238,6 +255,16 @@ fun SummaryCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .then(
+                    if (isGradient) {
+                        Modifier.background(
+                            brush = horizontalGradient,
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center
         ) {

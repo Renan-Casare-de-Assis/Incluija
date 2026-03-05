@@ -9,6 +9,7 @@ import br.com.fiap.incluija.TelaLogin
 import br.com.fiap.incluija.TelaCadastro
 import br.com.fiap.incluija.TelaHome
 import br.com.fiap.incluija.TelaPerfil
+import br.com.fiap.incluija.TelaCandidaturas
 
 /**
  * Configura a navegação principal do app
@@ -52,8 +53,17 @@ fun AppNavigation(
                         launchSingleTop = true
                         restoreState = true
                     }
+                },
+                onNavigateToCandidaturas = {
+                    navController.navigate(NavRoutes.Candidaturas.route) {
+                        launchSingleTop = true
+                    }
                 }
             )
+        }
+
+        composable(route = NavRoutes.Candidaturas.route) {
+            TelaCandidaturas()
         }
 
         composable(route = NavRoutes.Perfil.route) {
