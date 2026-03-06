@@ -1,5 +1,7 @@
 package br.com.fiap.incluija
 
+import br.com.fiap.incluija.data.RepositorioUsuarios
+import br.com.fiap.incluija.data.UsuarioMock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -79,8 +82,17 @@ fun TelaCadastro(
     var perfilError by remember { mutableStateOf<String?>(null) }
 
     var showSuccessDialog by remember { mutableStateOf(false) }
+    var showEmailDuplicadoDialog by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
+
+    // Gradiente laranja→rosa→roxo
+    val gradientColors = listOf(
+        Color(0xFFFFBD59), // Laranja/Amarelo
+        Color(0xFFE94057), // Rosa/Vermelho
+        Color(0xFF8A2387)  // Roxo
+    )
+    val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
 
     fun validarFormulario(): Boolean {
         nomeError = validateNome(nomeCompleto)
@@ -108,6 +120,49 @@ fun TelaCadastro(
             cidadeError,
             perfilError
         ).all { it == null }
+    }
+
+    fun registrarNoRepositorio() {
+        // Criar objeto UsuarioMock com os dados do formulário
+        val novoUsuario = UsuarioMock(
+            email = email,
+            senha = senha,
+            nomeCompleto = nomeCompleto,
+            cpf = cpf,
+            nascimento = nascimento,
+            telefone = telefone,
+            cidade = cidade,
+            vulnerabilidades = selectedChips
+        )
+
+        // Tentar registrar no repositório
+        val registroSucesso = RepositorioUsuarios.registrarUsuario(novoUsuario)
+
+        if (registroSucesso) {
+            // Sucesso: mostrar diálogo de sucesso
+            showSuccessDialog = true
+        } else {
+            // Falha: email já existe
+            showEmailDuplicadoDialog = true
+        }
+    }
+
+    if (showEmailDuplicadoDialog) {
+        AlertDialog(
+            onDismissRequest = { /* nao permite fechar fora do OK */ },
+            title = { Text(text = "Erro") },
+            text = { Text(text = "E-mail ja cadastrado. Tente outro.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showEmailDuplicadoDialog = false
+                    }
+                ) {
+                    Text(text = "OK", color = OrangePrimary)
+                }
+            },
+            dismissButton = null
+        )
     }
 
     if (showSuccessDialog) {
@@ -140,7 +195,7 @@ fun TelaCadastro(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(OrangePrimary)
+                    .background(horizontalGradient)
                     .padding(horizontal = 24.dp, vertical = 16.dp)
             ) {
                 Text(
@@ -373,14 +428,15 @@ fun TelaCadastro(
                 Button(
                     onClick = {
                         if (validarFormulario()) {
-                            showSuccessDialog = true
+                            registrarNoRepositorio()
                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
+                        .height(56.dp)
+                        .background(horizontalGradient, shape = RoundedCornerShape(28.dp)),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = OrangePrimary
+                        containerColor = Color.Transparent
                     ),
                     shape = RoundedCornerShape(28.dp)
                 ) {

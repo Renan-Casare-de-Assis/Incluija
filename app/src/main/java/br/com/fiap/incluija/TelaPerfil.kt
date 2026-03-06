@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -124,13 +125,21 @@ fun ProfileHeader(
     onEditClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Gradiente laranja→rosa→roxo
+    val gradientColors = listOf(
+        Color(0xFFFFBD59), // Laranja/Amarelo
+        Color(0xFFE94057), // Rosa/Vermelho
+        Color(0xFF8A2387)  // Roxo
+    )
+    val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-                .background(
-                    color = OrangePrimary,
-                    shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
-                )
+            .background(
+                brush = horizontalGradient,
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+            )
             .padding(horizontal = 24.dp, vertical = 32.dp)
     ) {
         // Botão Editar no canto superior direito

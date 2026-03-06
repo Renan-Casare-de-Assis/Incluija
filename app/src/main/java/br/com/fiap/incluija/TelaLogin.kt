@@ -1,5 +1,7 @@
 package br.com.fiap.incluija
 
+import androidx.compose.foundation.Image
+import br.com.fiap.incluija.data.RepositorioUsuarios
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,6 +27,51 @@ fun TelaLogin(
 ) {
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
+    var showErroLoginDialog by remember { mutableStateOf(false) }
+
+    fun validarLogin() {
+        // Validar se os campos estão vazios
+        if (email.isBlank() || senha.isBlank()) {
+            showErroLoginDialog = true
+            return
+        }
+
+        // Validar credenciais com o repositório
+        if (RepositorioUsuarios.validarLogin(email, senha)) {
+            // Sucesso: navegar para Home
+            onNavigateToHome()
+        } else {
+            // Falha: mostrar diálogo de erro
+            showErroLoginDialog = true
+        }
+    }
+
+    if (showErroLoginDialog) {
+        AlertDialog(
+            onDismissRequest = { /* nao permite fechar fora do OK */ },
+            title = { Text(text = "Erro de Login") },
+            text = { Text(text = "E-mail ou senha invalidos, tente novamente!") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showErroLoginDialog = false
+                        // Limpar os campos
+                        email = ""
+                        senha = ""
+                    }
+                ) {
+                    Text(text = "OK", color = Color(0xFFD2691E))
+                }
+            },
+            dismissButton = null
+        )
+    }
+    val gradientColors = listOf(
+        Color(0xFFFFBD59), // Laranja/Amarelo
+        Color(0xFFE94057), // Rosa/Vermelho
+        Color(0xFF8A2387)  // Roxo
+    )
+    val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
 
     Box(
         modifier = Modifier
@@ -43,22 +92,27 @@ fun TelaLogin(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Logo e título INCLUIJA
+            // Logo e título INCLUIJA (Lado a lado - conforme imagem)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "🤝",
-                    fontSize = 48.sp,
-                    modifier = Modifier.padding(end = 12.dp)
+                Image(
+                    painter = painterResource(id = R.drawable.logo_incluija),
+                    contentDescription = "Logo IncluiJá",
+                    modifier = Modifier.size(115.dp)
                 )
+
+                Spacer(modifier = Modifier.width(0.dp))
                 Column {
                     Text(
                         text = "INCLUIJÁ",
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        style = TextStyle(
+                            brush = horizontalGradient,
+                            fontSize = 34.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
                     )
                     Text(
                         text = "SEU FUTURO COMEÇA AQUI",
@@ -151,12 +205,13 @@ fun TelaLogin(
 
                     // Botão "Entrar"
                     Button(
-                        onClick = { onNavigateToHome() },
+                        onClick = { validarLogin() },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
+                            .height(56.dp)
+                            .background(horizontalGradient, shape = RoundedCornerShape(16.dp)),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFD2691E)
+                            containerColor = Color.Transparent
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
