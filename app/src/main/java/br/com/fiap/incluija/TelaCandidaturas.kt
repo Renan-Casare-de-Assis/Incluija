@@ -122,7 +122,7 @@ fun CandidaturaHeaderSection() {
                 imageVector = Icons.Default.DateRange,
                 contentDescription = null,
                 tint = HighlightYellow,
-                modifier = Modifier.size(28.dp).padding(end = 12.dp)
+                modifier = Modifier.size(30.dp).padding(end = 12.dp)
             )
             Text(
                 text = "Minhas Candidaturas",
