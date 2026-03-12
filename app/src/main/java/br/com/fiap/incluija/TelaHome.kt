@@ -32,6 +32,15 @@ private val CardBackground = Color(0xFF1C1C2E)
 private val GrayText = Color(0xFF9E9E9E)
 private val HighlightYellow = Color(0xFFFFBD59)
 
+// Gradiente colorido (igual à TelaLogin, TelaCadastro e TelaCandidaturas)
+private val gradientColors = listOf(
+    Color(0xFFFFBD59), // Laranja/Amarelo
+    Color(0xFFE94057), // Rosa/Vermelho
+    Color(0xFF8A2387)  // Roxo
+)
+private val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
+
+// Data classes para o estado
 data class Job(
     val title: String,
     val company: String,
@@ -43,7 +52,8 @@ data class Job(
 
 @Composable
 fun TelaHome(
-    onNavigation: (String) -> Unit = {}
+    onNavigation: (String) -> Unit = {},
+    onNavigateToCandidaturas: () -> Unit = {}
 ) {
     var selectedFilter by remember { mutableStateOf("Todas") }
     var selectedNavItem by remember { mutableStateOf("Início") }
@@ -73,7 +83,10 @@ fun TelaHome(
         ) {
             item { HeaderSection() }
 
-            item { SummaryCardsSection() }
+            // Cards de Resumo
+            item {
+                SummaryCardsSection(onNavigateToCandidaturas = onNavigateToCandidaturas)
+            }
 
             item {
                 Text(
@@ -111,16 +124,25 @@ fun HeaderSection() {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                brush = Brush.verticalGradient(colors = listOf(Color(0xFF2C1810), Color(0xFF1a1a2e))),
-                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                brush = horizontalGradient,
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
             .padding(horizontal = 24.dp, vertical = 32.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(id = R.drawable.logo_incluija),
-                contentDescription = "Logo",
-                modifier = Modifier.size(60.dp).padding(end = 16.dp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "",
+                fontSize = 24.sp,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text(
+                text = "INCLUIJÁ",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                letterSpacing = 1.sp
             )
             Column {
                 Text(
@@ -140,28 +162,72 @@ fun HeaderSection() {
 }
 
 @Composable
-fun SummaryCardsSection() {
+fun SummaryCardsSection(onNavigateToCandidaturas: () -> Unit = {}) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Card(
-            modifier = Modifier.weight(1.2f).height(150.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = CardBackground)
-        ) {
-            Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Center) {
-                Text(text = "📊", fontSize = 32.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "1.240", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = HighlightYellow)
-                Text(text = "Vagas abertas", fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
-            }
-        }
+        SummaryCard(
+            icon = "📊",
+            number = "1.240",
+            label = "Vagas abertas hoje",
+            isGradient = true,
+            backgroundColor = OrangePrimary,
+            textColor = Color.White,
+            modifier = Modifier.weight(1f)
+        )
 
-        Card(
-            modifier = Modifier.weight(1f).height(150.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = CardBackground)
+        SummaryCard(
+            icon = "🎯",
+            number = " 3",
+            label = "Minhas candidaturas",
+            isGradient = false,
+            backgroundColor = GrayLight,
+            textColor = GrayDark,
+            modifier = Modifier.weight(1f),
+            onClick = onNavigateToCandidaturas
+        )
+    }
+}
+
+@Composable
+fun SummaryCard(
+    icon: String,
+    number: String,
+    label: String,
+    backgroundColor: Color,
+    textColor: Color,
+    modifier: Modifier = Modifier,
+    isGradient: Boolean = false,
+    onClick: () -> Unit = {}
+) {
+    Card(
+        modifier = modifier
+            .height(140.dp)
+            .clickable(enabled = true) { onClick() },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isGradient) Color.Transparent else backgroundColor
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(
+                    if (isGradient) {
+                        Modifier.background(
+                            brush = horizontalGradient,
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center
         ) {
             Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Center) {
                 Text(text = "🎯", fontSize = 32.sp)

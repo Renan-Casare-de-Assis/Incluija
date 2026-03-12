@@ -1,6 +1,7 @@
 package br.com.fiap.incluija
 
 import androidx.compose.foundation.Image
+import br.com.fiap.incluija.data.RepositorioUsuarios
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,6 +27,51 @@ fun TelaLogin(
 ) {
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
+    var showErroLoginDialog by remember { mutableStateOf(false) }
+
+    fun validarLogin() {
+        // Validar se os campos estão vazios
+        if (email.isBlank() || senha.isBlank()) {
+            showErroLoginDialog = true
+            return
+        }
+
+        // Validar credenciais com o repositório
+        if (RepositorioUsuarios.validarLogin(email, senha)) {
+            // Sucesso: navegar para Home
+            onNavigateToHome()
+        } else {
+            // Falha: mostrar diálogo de erro
+            showErroLoginDialog = true
+        }
+    }
+
+    if (showErroLoginDialog) {
+        AlertDialog(
+            onDismissRequest = { /* nao permite fechar fora do OK */ },
+            title = { Text(text = "Erro de Login") },
+            text = { Text(text = "E-mail ou senha invalidos, tente novamente!") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showErroLoginDialog = false
+                        // Limpar os campos
+                        email = ""
+                        senha = ""
+                    }
+                ) {
+                    Text(text = "OK", color = Color(0xFFD2691E))
+                }
+            },
+            dismissButton = null
+        )
+    }
+    val gradientColors = listOf(
+        Color(0xFFFFBD59), // Laranja/Amarelo
+        Color(0xFFE94057), // Rosa/Vermelho
+        Color(0xFF8A2387)  // Roxo
+    )
+    val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
 
     val gradientColors = listOf(
         Color(0xFFFFBD59), // Laranja/Amarelo
@@ -64,9 +110,8 @@ fun TelaLogin(
                     contentDescription = "Logo IncluiJá",
                     modifier = Modifier.size(115.dp)
                 )
-                
-                Spacer(modifier = Modifier.width(12.dp))
 
+                Spacer(modifier = Modifier.width(0.dp))
                 Column {
                     Text(
                         text = "INCLUIJÁ",
@@ -165,7 +210,7 @@ fun TelaLogin(
 
                     // Botão Entrar com Gradiente e Seta
                     Button(
-                        onClick = { onNavigateToHome() },
+                        onClick = { validarLogin() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp)

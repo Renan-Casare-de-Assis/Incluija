@@ -125,15 +125,20 @@ fun ProfileHeader(
     onEditClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val gradientColors = listOf(Color(0xFFFFBD59), Color(0xFFE94057), Color(0xFF8A2387))
+    // Gradiente laranja→rosa→roxo
+    val gradientColors = listOf(
+        Color(0xFFFFBD59), // Laranja/Amarelo
+        Color(0xFFE94057), // Rosa/Vermelho
+        Color(0xFF8A2387)  // Roxo
+    )
     val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                brush = Brush.verticalGradient(colors = listOf(Color(0xFF2C1810), Color(0xFF1a1a2e))),
-                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                brush = horizontalGradient,
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
             .padding(horizontal = 24.dp, vertical = 32.dp)
     ) {
