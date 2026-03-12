@@ -355,7 +355,7 @@ fun TelaCadastro(
                     Text(
                         text = perfilError!!,
                         color = Color(0xFFF44336),
-                        fontSize = 12.sp
+                        fontSize = 13.sp
                     )
                 }
 
