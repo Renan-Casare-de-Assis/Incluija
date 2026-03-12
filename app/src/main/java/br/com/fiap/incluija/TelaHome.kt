@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +31,7 @@ private val CardBackground = Color(0xFF1C1C2E)
 private val GrayText = Color(0xFF9E9E9E)
 private val HighlightYellow = Color(0xFFFFBD59)
 
-// Gradiente colorido (igual à TelaLogin, TelaCadastro e TelaCandidaturas)
+// Gradiente colorido (igual à TelaLogin)
 private val gradientColors = listOf(
     Color(0xFFFFBD59), // Laranja/Amarelo
     Color(0xFFE94057), // Rosa/Vermelho
@@ -117,41 +116,44 @@ fun TelaHome(
 
 @Composable
 fun HeaderSection() {
-    val gradientColors = listOf(Color(0xFFFFBD59), Color(0xFFE94057), Color(0xFF8A2387))
-    val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                brush = horizontalGradient,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF2C1810),
+                        Color(0xFF1a1a2e)
+                    )
+                ),
                 shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
             .padding(horizontal = 24.dp, vertical = 32.dp)
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "",
-                fontSize = 24.sp,
-                modifier = Modifier.padding(end = 8.dp)
+            Image(
+                painter = painterResource(id = R.drawable.logo_incluija),
+                contentDescription = "Logo IncluiJá",
+                modifier = Modifier.size(60.dp)
             )
-            Text(
-                text = "INCLUIJÁ",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                letterSpacing = 1.sp
-            )
+
+            Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
                     text = "INCLUIJÁ",
-                    style = TextStyle(brush = horizontalGradient, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
+                    style = TextStyle(
+                        brush = horizontalGradient,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
                 )
                 Text(
                     text = "SEU FUTURO COMEÇA AQUI",
-                    fontSize = 11.sp,
+                    fontSize = 10.sp,
                     color = Color.White.copy(alpha = 0.7f),
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
@@ -171,9 +173,9 @@ fun SummaryCardsSection(onNavigateToCandidaturas: () -> Unit = {}) {
             icon = "📊",
             number = "1.240",
             label = "Vagas abertas hoje",
-            isGradient = true,
-            backgroundColor = OrangePrimary,
-            textColor = Color.White,
+            isGradient = false,
+            backgroundColor = CardBackground,
+            textColor = HighlightYellow,
             modifier = Modifier.weight(1f)
         )
 
@@ -182,8 +184,8 @@ fun SummaryCardsSection(onNavigateToCandidaturas: () -> Unit = {}) {
             number = " 3",
             label = "Minhas candidaturas",
             isGradient = false,
-            backgroundColor = GrayLight,
-            textColor = GrayDark,
+            backgroundColor = CardBackground,
+            textColor = HighlightYellow,
             modifier = Modifier.weight(1f),
             onClick = onNavigateToCandidaturas
         )
@@ -213,7 +215,7 @@ fun SummaryCard(
             defaultElevation = 4.dp
         )
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .then(
@@ -226,14 +228,26 @@ fun SummaryCard(
                         Modifier
                     }
                 )
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center
         ) {
-            Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Center) {
-                Text(text = "🎯", fontSize = 32.sp)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(text = icon, fontSize = 32.sp)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "18", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = HighlightYellow)
-                Text(text = "Para seu perfil", fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
+                Text(
+                    text = number,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isGradient) Color.White else textColor
+                )
+                Text(
+                    text = label,
+                    fontSize = 12.sp,
+                    color = (if (isGradient) Color.White else textColor).copy(alpha = 0.8f)
+                )
             }
         }
     }
@@ -283,7 +297,6 @@ fun JobCard(job: Job) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     job.tags.take(2).forEach { tag ->
-                        // Tags com fundo amarelo e texto preto para máximo destaque
                         Surface(
                             shape = RoundedCornerShape(8.dp), 
                             color = HighlightYellow 

@@ -65,6 +65,7 @@ fun TelaCadastro(
         Color(0xFF8A2387)  // Roxo
     )
     val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
+    val highlightColor = Color(0xFFFFBD59)
 
     fun validarFormulario(): Boolean {
         nomeError = validateNome(nomeCompleto)
@@ -121,7 +122,7 @@ fun TelaCadastro(
 
     if (showEmailDuplicadoDialog) {
         AlertDialog(
-            onDismissRequest = { /* nao permite fechar fora do OK */ },
+            onDismissRequest = { showEmailDuplicadoDialog = false },
             title = { Text(text = "Erro") },
             text = { Text(text = "E-mail ja cadastrado. Tente outro.") },
             confirmButton = {
@@ -130,7 +131,7 @@ fun TelaCadastro(
                         showEmailDuplicadoDialog = false
                     }
                 ) {
-                    Text(text = "OK", color = OrangePrimary)
+                    Text(text = "OK", color = highlightColor)
                 }
             },
             dismissButton = null
@@ -139,7 +140,7 @@ fun TelaCadastro(
 
     if (showSuccessDialog) {
         AlertDialog(
-            onDismissRequest = { },
+            onDismissRequest = { showSuccessDialog = false },
             title = { Text(text = "Sucesso") },
             text = { Text(text = "Cadastramento efetuado com sucesso") },
             confirmButton = {
@@ -171,269 +172,259 @@ fun TelaCadastro(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 20.dp)
         ) {
-            // Header customizado
-            Box(
+            // Apenas a setinha de voltar para economizar espaço
+            Text(
+                text = "←",
+                color = Color.White,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(horizontalGradient)
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                    .padding(vertical = 12.dp)
+                    .clickable { onNavigateBack() }
+            )
+
+            Text(
+                text = "DADOS PESSOAIS",
+                style = TextStyle(
+                    brush = horizontalGradient,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 1.sp
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            CustomTextField(
+                value = nomeCompleto,
+                onValueChange = {
+                    nomeCompleto = it
+                    nomeError = null
+                },
+                placeholder = "Nome completo",
+                errorMessage = nomeError
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = "← Voltar",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onNavigateBack() }
+                CustomTextField(
+                    value = cpf,
+                    onValueChange = {
+                        cpf = it
+                        cpfError = null
+                    },
+                    placeholder = "CPF",
+                    errorMessage = cpfError,
+                    modifier = Modifier.weight(1f)
+                )
+
+                CustomTextField(
+                    value = nascimento,
+                    onValueChange = {
+                        nascimento = it
+                        nascimentoError = null
+                    },
+                    placeholder = "Nascimento",
+                    errorMessage = nascimentoError,
+                    modifier = Modifier.weight(1f)
                 )
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            CustomTextField(
+                value = email,
+                onValueChange = {
+                    email = it
+                    emailError = null
+                },
+                placeholder = "E-mail",
+                errorMessage = emailError
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            CustomPasswordField(
+                value = senha,
+                onValueChange = {
+                    senha = it
+                    senhaError = null
+                },
+                placeholder = "Senha",
+                isPasswordVisible = senhaVisivel,
+                onVisibilityToggle = { senhaVisivel = !senhaVisivel },
+                errorMessage = senhaError
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            CustomPasswordField(
+                value = repetirSenha,
+                onValueChange = {
+                    repetirSenha = it
+                    repetirSenhaError = null
+                },
+                placeholder = "Repetir Senha",
+                isPasswordVisible = repetirSenhaVisivel,
+                onVisibilityToggle = { repetirSenhaVisivel = !repetirSenhaVisivel },
+                errorMessage = repetirSenhaError
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            CustomTextField(
+                value = telefone,
+                onValueChange = {
+                    telefone = it
+                    telefoneError = null
+                },
+                placeholder = "Telefone / WhatsApp",
+                errorMessage = telefoneError
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            CustomTextField(
+                value = cidade,
+                onValueChange = {
+                    cidade = it
+                    cidadeError = null
+                },
+                placeholder = "Cidade - Estado",
+                errorMessage = cidadeError
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "PERFIL DE VULNERABILIDADE",
+                style = TextStyle(
+                    brush = horizontalGradient,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 1.sp
+                )
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Selecione o que se aplica a você:",
+                fontSize = 14.sp,
+                color = Color.White.copy(alpha = 0.7f),
+                fontWeight = FontWeight.Medium
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Estrutura de Chips usando apenas Column/Row estáveis
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 20.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    text = "DADOS PESSOAIS",
-                    style = TextStyle(
-                        brush = horizontalGradient,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 1.sp
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                CustomTextField(
-                    value = nomeCompleto,
-                    onValueChange = {
-                        nomeCompleto = it
-                        nomeError = null
-                    },
-                    placeholder = "Nome completo",
-                    errorMessage = nomeError
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    CustomTextField(
-                        value = cpf,
-                        onValueChange = {
-                            cpf = it
-                            cpfError = null
-                        },
-                        placeholder = "CPF",
-                        errorMessage = cpfError,
+                    SelectableChip(
+                        text = "Refugiado/Migrante",
+                        isSelected = selectedChips.contains("Refugiado/Migrante"),
+                        onSelected = { selectedChips = toggleChip(selectedChips, "Refugiado/Migrante"); perfilError = null },
+                        gradient = horizontalGradient,
                         modifier = Modifier.weight(1f)
                     )
-
-                    CustomTextField(
-                        value = nascimento,
-                        onValueChange = {
-                            nascimento = it
-                            nascimentoError = null
-                        },
-                        placeholder = "Nascimento",
-                        errorMessage = nascimentoError,
-                        modifier = Modifier.weight(1f)
+                    SelectableChip(
+                        text = "PcD",
+                        isSelected = selectedChips.contains("PcD"),
+                        onSelected = { selectedChips = toggleChip(selectedChips, "PcD"); perfilError = null },
+                        gradient = horizontalGradient,
+                        modifier = Modifier.weight(0.5f)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                CustomTextField(
-                    value = email,
-                    onValueChange = {
-                        email = it
-                        emailError = null
-                    },
-                    placeholder = "E-mail",
-                    errorMessage = emailError
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                CustomPasswordField(
-                    value = senha,
-                    onValueChange = {
-                        senha = it
-                        senhaError = null
-                    },
-                    placeholder = "Senha",
-                    isPasswordVisible = senhaVisivel,
-                    onVisibilityToggle = { senhaVisivel = !senhaVisivel },
-                    errorMessage = senhaError
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                CustomPasswordField(
-                    value = repetirSenha,
-                    onValueChange = {
-                        repetirSenha = it
-                        repetirSenhaError = null
-                    },
-                    placeholder = "Repetir Senha",
-                    isPasswordVisible = repetirSenhaVisivel,
-                    onVisibilityToggle = { repetirSenhaVisivel = !repetirSenhaVisivel },
-                    errorMessage = repetirSenhaError
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                CustomTextField(
-                    value = telefone,
-                    onValueChange = {
-                        telefone = it
-                        telefoneError = null
-                    },
-                    placeholder = "Telefone / WhatsApp",
-                    errorMessage = telefoneError
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                CustomTextField(
-                    value = cidade,
-                    onValueChange = {
-                        cidade = it
-                        cidadeError = null
-                    },
-                    placeholder = "Cidade - Estado",
-                    errorMessage = cidadeError
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = "PERFIL DE VULNERABILIDADE",
-                    style = TextStyle(
-                        brush = horizontalGradient,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 1.sp
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Selecione o que se aplica a você:",
-                    fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontWeight = FontWeight.Medium
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Estrutura de Chips usando apenas Column/Row estáveis
-                Column(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SelectableChip(
-                            text = "Refugiado/Migrante",
-                            isSelected = selectedChips.contains("Refugiado/Migrante"),
-                            onSelected = { selectedChips = toggleChip(selectedChips, "Refugiado/Migrante"); perfilError = null },
-                            gradient = horizontalGradient,
-                            modifier = Modifier.weight(1f)
-                        )
-                        SelectableChip(
-                            text = "PcD",
-                            isSelected = selectedChips.contains("PcD"),
-                            onSelected = { selectedChips = toggleChip(selectedChips, "PcD"); perfilError = null },
-                            gradient = horizontalGradient,
-                            modifier = Modifier.weight(0.5f)
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SelectableChip(
-                            text = "Indígena",
-                            isSelected = selectedChips.contains("Indígena"),
-                            onSelected = { selectedChips = toggleChip(selectedChips, "Indígena"); perfilError = null },
-                            gradient = horizontalGradient,
-                            modifier = Modifier.weight(1f)
-                        )
-                        SelectableChip(
-                            text = "LGBTQIA+",
-                            isSelected = selectedChips.contains("LGBTQIA+"),
-                            onSelected = { selectedChips = toggleChip(selectedChips, "LGBTQIA+"); perfilError = null },
-                            gradient = horizontalGradient,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SelectableChip(
-                            text = "Egresso prisional",
-                            isSelected = selectedChips.contains("Egresso prisional"),
-                            onSelected = { selectedChips = toggleChip(selectedChips, "Egresso prisional"); perfilError = null },
-                            gradient = horizontalGradient,
-                            modifier = Modifier.weight(1f)
-                        )
-                        SelectableChip(
-                            text = "Outro",
-                            isSelected = selectedChips.contains("Outro"),
-                            onSelected = { selectedChips = toggleChip(selectedChips, "Outro"); perfilError = null },
-                            gradient = horizontalGradient,
-                            modifier = Modifier.weight(0.5f)
-                        )
-                    }
-                }
-
-                if (perfilError != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = perfilError!!,
-                        color = Color(0xFFF44336),
-                        fontSize = 13.sp
+                    SelectableChip(
+                        text = "Indígena",
+                        isSelected = selectedChips.contains("Indígena"),
+                        onSelected = { selectedChips = toggleChip(selectedChips, "Indígena"); perfilError = null },
+                        gradient = horizontalGradient,
+                        modifier = Modifier.weight(1f)
+                    )
+                    SelectableChip(
+                        text = "LGBTQIA+",
+                        isSelected = selectedChips.contains("LGBTQIA+"),
+                        onSelected = { selectedChips = toggleChip(selectedChips, "LGBTQIA+"); perfilError = null },
+                        gradient = horizontalGradient,
+                        modifier = Modifier.weight(1f)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Botão Continuar com Gradiente
-                Button(
-                    onClick = {
-                        if (validarFormulario()) {
-                            registrarNoRepositorio()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .background(horizontalGradient, shape = RoundedCornerShape(28.dp)),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                    contentPadding = PaddingValues()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = "Continuar →",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                    SelectableChip(
+                        text = "Egresso prisional",
+                        isSelected = selectedChips.contains("Egresso prisional"),
+                        onSelected = { selectedChips = toggleChip(selectedChips, "Egresso prisional"); perfilError = null },
+                        gradient = horizontalGradient,
+                        modifier = Modifier.weight(1f)
+                    )
+                    SelectableChip(
+                        text = "Outro",
+                        isSelected = selectedChips.contains("Outro"),
+                        onSelected = { selectedChips = toggleChip(selectedChips, "Outro"); perfilError = null },
+                        gradient = horizontalGradient,
+                        modifier = Modifier.weight(0.5f)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
             }
+
+            if (perfilError != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = perfilError!!,
+                    color = Color(0xFFF44336),
+                    fontSize = 13.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Botão Continuar com Gradiente
+            Button(
+                onClick = {
+                    if (validarFormulario()) {
+                        registrarNoRepositorio()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(horizontalGradient, shape = RoundedCornerShape(28.dp)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                contentPadding = PaddingValues()
+            ) {
+                Text(
+                    text = "Continuar →",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

@@ -1,5 +1,6 @@
 package br.com.fiap.incluija
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -137,11 +140,46 @@ fun ProfileHeader(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                brush = horizontalGradient,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF2C1810),
+                        Color(0xFF1a1a2e)
+                    )
+                ),
                 shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
             .padding(horizontal = 24.dp, vertical = 32.dp)
     ) {
+        // Row for Logo and Section Title (consistent with others)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo_incluija),
+                contentDescription = "Logo IncluiJá",
+                modifier = Modifier.size(60.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = "MEU PERFIL",
+                    style = TextStyle(
+                        brush = horizontalGradient,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                )
+                Text(
+                    text = "DADOS E COMPETÊNCIAS",
+                    fontSize = 10.sp,
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+        }
+
         // Botão Editar
         Button(
             onClick = onEditClick,
@@ -160,7 +198,7 @@ fun ProfileHeader(
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 80.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Avatar
@@ -179,9 +217,11 @@ fun ProfileHeader(
 
             Text(
                 text = "MARIA SILVA",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White,
+                style = TextStyle(
+                    brush = horizontalGradient,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold
+                ),
                 letterSpacing = 1.sp
             )
 

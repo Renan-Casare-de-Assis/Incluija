@@ -1,5 +1,6 @@
 package br.com.fiap.incluija
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -105,7 +107,6 @@ fun TelaCandidaturas() {
 
 @Composable
 fun CandidaturaHeaderSection() {
-    // Gradiente laranja→rosa→roxo
     val gradientColors = listOf(
         Color(0xFFFFBD59), // Laranja/Amarelo
         Color(0xFFE94057), // Rosa/Vermelho
@@ -117,26 +118,46 @@ fun CandidaturaHeaderSection() {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                brush = horizontalGradient,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF2C1810),
+                        Color(0xFF1a1a2e)
+                    )
+                ),
                 shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
             .padding(horizontal = 24.dp, vertical = 32.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.DateRange,
-                contentDescription = null,
-                tint = HighlightYellow,
-                modifier = Modifier.size(30.dp).padding(end = 12.dp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo_incluija),
+                contentDescription = "Logo IncluiJá",
+                modifier = Modifier.size(60.dp)
             )
-            Text(
-                text = "Minhas Candidaturas",
-                style = TextStyle(
-                    brush = horizontalGradient,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.ExtraBold
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column {
+                Text(
+                    text = "MINHAS CANDIDATURAS",
+                    style = TextStyle(
+                        brush = horizontalGradient,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
                 )
-            )
+                Text(
+                    text = "ACOMPANHE SEU PROGRESSO",
+                    fontSize = 10.sp,
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
         }
     }
 }

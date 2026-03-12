@@ -48,7 +48,7 @@ fun TelaLogin(
 
     if (showErroLoginDialog) {
         AlertDialog(
-            onDismissRequest = { /* nao permite fechar fora do OK */ },
+            onDismissRequest = { showErroLoginDialog = false },
             title = { Text(text = "Erro de Login") },
             text = { Text(text = "E-mail ou senha invalidos, tente novamente!") },
             confirmButton = {
@@ -66,12 +66,6 @@ fun TelaLogin(
             dismissButton = null
         )
     }
-    val gradientColors = listOf(
-        Color(0xFFFFBD59), // Laranja/Amarelo
-        Color(0xFFE94057), // Rosa/Vermelho
-        Color(0xFF8A2387)  // Roxo
-    )
-    val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
 
     val gradientColors = listOf(
         Color(0xFFFFBD59), // Laranja/Amarelo
