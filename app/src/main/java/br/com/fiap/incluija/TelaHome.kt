@@ -1,5 +1,6 @@
 package br.com.fiap.incluija
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,17 +19,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Cores da aplicação
-private val OrangePrimary = Color(0xFFD35429)
-private val BeigeBackground = Color(0xFFF5EFE9)
-private val GrayLight = Color(0xFFE8E8E8)
-private val GrayText = Color(0xFF757575)
-private val GrayDark = Color(0xFF424242)
+// Paleta de Cores Premium Dark
+private val DarkBackground = Color(0xFF0F0F1A)
+private val CardBackground = Color(0xFF1C1C2E)
+private val GrayText = Color(0xFF9E9E9E)
+private val HighlightYellow = Color(0xFFFFBD59)
 
 // Gradiente colorido (igual à TelaLogin, TelaCadastro e TelaCandidaturas)
 private val gradientColors = listOf(
@@ -48,23 +50,6 @@ data class Job(
     val category: String
 )
 
-/**
- * Filtra a lista de jobs baseado na categoria selecionada
- */
-fun filterJobs(jobs: List<Job>, selectedFilter: String): List<Job> {
-    return if (selectedFilter == "Todas") {
-        jobs
-    } else {
-        jobs.filter { it.category == selectedFilter }
-    }
-}
-
-data class BottomNavItem(
-    val label: String,
-    val icon: ImageVector,
-    val selected: Boolean
-)
-
 @Composable
 fun TelaHome(
     onNavigation: (String) -> Unit = {},
@@ -76,45 +61,16 @@ fun TelaHome(
     val filters = listOf("Todas", "Remoto", "CLT", "Sem experiência")
 
     val jobs = listOf(
-        Job(
-            title = "Atendente de Loja",
-            company = "Mercadão Brasil",
-            salary = "R\$1.600",
-            tags = listOf("CLT", "Presencial", "PcD"),
-            icon = "🏪",
-            category = "CLT"
-        ),
-        Job(
-            title = "Auxiliar Administrativo",
-            company = "TechImpulso",
-            salary = "R\$1.900",
-            tags = listOf("Remoto", "PJ"),
-            icon = "💻",
-            category = "Remoto"
-        ),
-        Job(
-            title = "Auxiliar de Cozinha",
-            company = "Restaurante Sabor",
-            salary = "R\$1.412",
-            tags = listOf("CLT", "Migrante"),
-            icon = "👨‍🍳",
-            category = "CLT"
-        )
-    )
-
-    val navItems = listOf(
-        BottomNavItem("Início", Icons.Default.Home, selectedNavItem == "Início"),
-        BottomNavItem("Buscar", Icons.Default.Search, selectedNavItem == "Buscar"),
-        BottomNavItem("Vagas", Icons.Default.Favorite, selectedNavItem == "Minhas vagas"),
-        BottomNavItem("Cursos", Icons.Default.Create, selectedNavItem == "Cursos"),
-        BottomNavItem("Perfil", Icons.Default.Person, selectedNavItem == "Perfil")
+        Job("Atendente de Loja", "Mercadão Brasil", "R$1.600", listOf("CLT", "Presencial", "PcD"), "🏪", "CLT"),
+        Job("Auxiliar Administrativo", "TechImpulso", "R$1.900", listOf("Remoto", "PJ"), "💻", "Remoto"),
+        Job("Auxiliar de Cozinha", "Restaurante Sabor", "R$1.412", listOf("CLT", "Migrante"), "👨‍🍳", "CLT")
     )
 
     Scaffold(
-        containerColor = BeigeBackground,
+        containerColor = DarkBackground,
         bottomBar = {
             BottomNavigationBar(
-                items = navItems,
+                selectedItem = selectedNavItem,
                 onItemClick = { selectedNavItem = it },
                 onNavigation = onNavigation
             )
@@ -125,28 +81,23 @@ fun TelaHome(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Header
-            item {
-                HeaderSection()
-            }
+            item { HeaderSection() }
 
             // Cards de Resumo
             item {
                 SummaryCardsSection(onNavigateToCandidaturas = onNavigateToCandidaturas)
             }
 
-            // Título "Vagas em destaque"
             item {
                 Text(
                     text = "Vagas em destaque",
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = GrayDark,
+                    color = Color.White,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
                 )
             }
 
-            // Filtros
             item {
                 FiltersSection(
                     filters = filters,
@@ -155,21 +106,20 @@ fun TelaHome(
                 )
             }
 
-            // Lista de Vagas
-            items(filterJobs(jobs, selectedFilter)) { job ->
+            items(if (selectedFilter == "Todas") jobs else jobs.filter { it.category == selectedFilter }) { job ->
                 JobCard(job = job)
             }
 
-            // Espaço final
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+            item { Spacer(modifier = Modifier.height(20.dp)) }
         }
     }
 }
 
 @Composable
 fun HeaderSection() {
+    val gradientColors = listOf(Color(0xFFFFBD59), Color(0xFFE94057), Color(0xFF8A2387))
+    val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -177,7 +127,7 @@ fun HeaderSection() {
                 brush = horizontalGradient,
                 shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
-            .padding(horizontal = 24.dp, vertical = 20.dp)
+            .padding(horizontal = 24.dp, vertical = 32.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -194,6 +144,19 @@ fun HeaderSection() {
                 color = Color.White,
                 letterSpacing = 1.sp
             )
+            Column {
+                Text(
+                    text = "INCLUIJÁ",
+                    style = TextStyle(brush = horizontalGradient, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
+                )
+                Text(
+                    text = "SEU FUTURO COMEÇA AQUI",
+                    fontSize = 11.sp,
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
         }
     }
 }
@@ -201,9 +164,7 @@ fun HeaderSection() {
 @Composable
 fun SummaryCardsSection(onNavigateToCandidaturas: () -> Unit = {}) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 20.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         SummaryCard(
@@ -268,254 +229,105 @@ fun SummaryCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = icon,
-                fontSize = 32.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = number,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = textColor
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = label,
-                fontSize = 13.sp,
-                color = textColor.copy(alpha = 0.9f),
-                lineHeight = 16.sp
-            )
+            Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Center) {
+                Text(text = "🎯", fontSize = 32.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "18", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = HighlightYellow)
+                Text(text = "Para seu perfil", fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
+            }
         }
     }
 }
 
 @Composable
-fun FiltersSection(
-    filters: List<String>,
-    selectedFilter: String,
-    onFilterSelected: (String) -> Unit
-) {
+fun FiltersSection(filters: List<String>, selectedFilter: String, onFilterSelected: (String) -> Unit) {
     LazyRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         items(filters) { filter ->
-            FilterChip(
-                text = filter,
-                isSelected = filter == selectedFilter,
-                onClick = { onFilterSelected(filter) }
-            )
+            val isSelected = filter == selectedFilter
+            Surface(
+                onClick = { onFilterSelected(filter) },
+                shape = RoundedCornerShape(16.dp),
+                color = if (isSelected) HighlightYellow else CardBackground,
+                modifier = Modifier
+            ) {
+                Text(
+                    text = filter,
+                    color = if (isSelected) Color.Black else Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                )
+            }
         }
-    }
-}
-
-@Composable
-fun FilterChip(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(50),
-        color = if (isSelected) Color.Black else GrayLight,
-        modifier = Modifier
-    ) {
-        Text(
-            text = text,
-            color = if (isSelected) Color.White else GrayDark,
-            fontSize = 14.sp,
-            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
-        )
     }
 }
 
 @Composable
 fun JobCard(job: Job) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+        colors = CardDefaults.cardColors(containerColor = CardBackground)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Ícone da vaga
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(GrayLight),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = job.icon,
-                    fontSize = 28.sp
-                )
+        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(50.dp).clip(CircleShape).background(Color(0xFF252538)), contentAlignment = Alignment.Center) {
+                Text(text = job.icon, fontSize = 24.sp)
             }
-
             Spacer(modifier = Modifier.width(16.dp))
-
-            // Informações da vaga
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = job.title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = GrayDark
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = job.company,
-                    fontSize = 14.sp,
-                    color = GrayText
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Tags
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    job.tags.take(3).forEach { tag ->
-                        JobTag(text = tag)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Salário
-            Text(
-                text = job.salary,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = OrangePrimary
-            )
-        }
-    }
-}
-
-@Composable
-fun JobTag(text: String) {
-    val backgroundColor = when (text) {
-        "CLT" -> Color(0xFFE8F5E9)
-        "Presencial" -> Color(0xFFFFF3E0)
-        "PcD" -> Color(0xFFFFEBEE)
-        "Remoto" -> Color(0xFFE0F7FA)
-        "PJ" -> Color(0xFFF3E5F5)
-        "Migrante" -> Color(0xFFFFF9C4)
-        else -> GrayLight
-    }
-
-    val textColor = when (text) {
-        "CLT" -> Color(0xFF2E7D32)
-        "Presencial" -> Color(0xFFE65100)
-        "PcD" -> Color(0xFFC62828)
-        "Remoto" -> Color(0xFF00838F)
-        "PJ" -> Color(0xFF6A1B9A)
-        "Migrante" -> Color(0xFFF57F17)
-        else -> GrayDark
-    }
-
-    Surface(
-        shape = RoundedCornerShape(6.dp),
-        color = backgroundColor
-    ) {
-        Text(
-            text = text,
-            fontSize = 11.sp,
-            color = textColor,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        )
-    }
-}
-
-@Composable
-fun BottomNavigationBar(
-    items: List<BottomNavItem>,
-    onItemClick: (String) -> Unit,
-    onNavigation: (String) -> Unit = {}
-) {
-    Surface(
-        shadowElevation = 8.dp,
-        color = Color.White
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp)
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            items.forEach { item ->
-                BottomNavItemView(
-                    item = item,
-                    onClick = { onItemClick(item.label) },
-                    onNavigateToPerfil = {
-                        if (item.label == "Perfil") {
-                            onNavigation("perfil")
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = job.title, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(text = job.company, fontSize = 13.sp, color = GrayText)
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    job.tags.take(2).forEach { tag ->
+                        // Tags com fundo amarelo e texto preto para máximo destaque
+                        Surface(
+                            shape = RoundedCornerShape(8.dp), 
+                            color = HighlightYellow 
+                        ) {
+                            Text(
+                                text = tag, 
+                                fontSize = 10.sp, 
+                                fontWeight = FontWeight.ExtraBold, 
+                                color = Color.Black, 
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
                         }
                     }
-                )
+                }
             }
+            Text(text = job.salary, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
         }
     }
 }
 
 @Composable
-fun BottomNavItemView(
-    item: BottomNavItem,
-    onClick: () -> Unit,
-    onNavigateToPerfil: () -> Unit = {}
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .padding(horizontal = 8.dp)
-            .width(60.dp)
-    ) {
-        IconButton(
-            onClick = {
-                onClick()
-                if (item.label == "Perfil") {
-                    onNavigateToPerfil()
-                }
-            },
-            modifier = Modifier.size(32.dp)
-        ) {
-            Icon(
-                imageVector = item.icon,
-                contentDescription = item.label,
-                tint = if (item.selected) OrangePrimary else GrayText,
-                modifier = Modifier.size(24.dp)
+fun BottomNavigationBar(selectedItem: String, onItemClick: (String) -> Unit, onNavigation: (String) -> Unit) {
+    Surface(color = CardBackground, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().height(70.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+            val navItems = listOf(
+                Pair("Início", Icons.Default.Home),
+                Pair("Buscar", Icons.Default.Search),
+                Pair("Vagas", Icons.Default.Favorite),
+                Pair("Perfil", Icons.Default.Person)
             )
+            navItems.forEach { (label, icon) ->
+                val isSelected = selectedItem == label
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.clickable { 
+                        onItemClick(label)
+                        if (label == "Perfil") onNavigation("perfil")
+                    }
+                ) {
+                    Icon(imageVector = icon, contentDescription = label, tint = if (isSelected) HighlightYellow else GrayText)
+                    Text(text = label, fontSize = 11.sp, color = if (isSelected) HighlightYellow else GrayText)
+                }
+            }
         }
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = item.label,
-            fontSize = 11.sp,
-            color = if (item.selected) OrangePrimary else GrayText,
-            fontWeight = if (item.selected) FontWeight.Medium else FontWeight.Normal
-        )
     }
 }
 

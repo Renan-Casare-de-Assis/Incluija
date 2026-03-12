@@ -73,14 +73,21 @@ fun TelaLogin(
     )
     val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
 
+    val gradientColors = listOf(
+        Color(0xFFFFBD59), // Laranja/Amarelo
+        Color(0xFFE94057), // Rosa/Vermelho
+        Color(0xFF8A2387)  // Roxo
+    )
+    val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF2C1810),  // Marrom escuro no topo
-                        Color(0xFF1a1a2e)   // Azul escuro embaixo
+                        Color(0xFF2C1810),
+                        Color(0xFF1a1a2e)
                     )
                 )
             )
@@ -116,9 +123,10 @@ fun TelaLogin(
                     )
                     Text(
                         text = "SEU FUTURO COMEÇA AQUI",
-                        fontSize = 10.sp,
-                        color = Color.Gray,
-                        letterSpacing = 2.sp
+                        fontSize = 11.sp,
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
                     )
                 }
             }
@@ -140,7 +148,6 @@ fun TelaLogin(
                         .padding(24.dp)
                         .fillMaxWidth()
                 ) {
-                    // Título "Entrar na conta"
                     Text(
                         text = "Entrar na conta",
                         fontSize = 24.sp,
@@ -150,7 +157,6 @@ fun TelaLogin(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Campo E-MAIL
                     Text(
                         text = "E-MAIL",
                         fontSize = 12.sp,
@@ -165,7 +171,7 @@ fun TelaLogin(
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
-                            focusedBorderColor = Color(0xFFFF9966),
+                            focusedBorderColor = Color(0xFFFFBD59),
                             unfocusedContainerColor = Color(0xFF3a3a4e),
                             focusedContainerColor = Color(0xFF3a3a4e),
                             unfocusedTextColor = Color.White,
@@ -176,7 +182,6 @@ fun TelaLogin(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Campo SENHA
                     Text(
                         text = "SENHA",
                         fontSize = 12.sp,
@@ -192,7 +197,7 @@ fun TelaLogin(
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
-                            focusedBorderColor = Color(0xFFFF9966),
+                            focusedBorderColor = Color(0xFFFFBD59),
                             unfocusedContainerColor = Color(0xFF3a3a4e),
                             focusedContainerColor = Color(0xFF3a3a4e),
                             unfocusedTextColor = Color.White,
@@ -203,7 +208,7 @@ fun TelaLogin(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Botão "Entrar"
+                    // Botão Entrar com Gradiente e Seta
                     Button(
                         onClick = { validarLogin() },
                         modifier = Modifier
@@ -213,10 +218,10 @@ fun TelaLogin(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        contentPadding = PaddingValues()
                     ) {
                         Text(
-                            text = "Entrar",
+                            text = "Entrar →",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -225,7 +230,6 @@ fun TelaLogin(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Texto "Não tem conta?"
                     Row(
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) {
@@ -237,7 +241,7 @@ fun TelaLogin(
                         Text(
                             text = "Criar gratuitamente",
                             fontSize = 14.sp,
-                            color = Color(0xFFFF9966),
+                            color = Color(0xFFFFBD59),
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.clickable { onNavigateToCadastro() }
                         )

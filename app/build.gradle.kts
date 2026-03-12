@@ -5,16 +5,12 @@ plugins {
 
 android {
     namespace = "br.com.fiap.incluija"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "br.com.fiap.incluija"
         minSdk = 28
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
