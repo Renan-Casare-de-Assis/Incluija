@@ -24,53 +24,187 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.io.OutputStreamWriter
+import java.net.HttpURLConnection
+import java.net.URL
 
-// Paleta de Cores Premium Dark
-private val DarkBackground = Color(0xFF0F0F1A)
-private val CardBackground = Color(0xFF1C1C2E)
-private val GrayText = Color(0xFF9E9E9E)
+// ─── Paleta de Cores ───────────────────────────────────────────────────────────
+private val DarkBackground  = Color(0xFF0F0F1A)
+private val CardBackground  = Color(0xFF1C1C2E)
+private val GrayText        = Color(0xFF9E9E9E)
 private val HighlightYellow = Color(0xFFFFBD59)
 
-// Gradiente colorido (igual à TelaLogin)
 private val gradientColors = listOf(
-    Color(0xFFFFBD59), // Laranja/Amarelo
-    Color(0xFFE94057), // Rosa/Vermelho
-    Color(0xFF8A2387)  // Roxo
+    Color(0xFFFFBD59),
+    Color(0xFFE94057),
+    Color(0xFF8A2387)
 )
 private val horizontalGradient = Brush.horizontalGradient(colors = gradientColors)
 
-// Data classes para o estado
+// ─── API Config ────────────────────────────────────────────────────────────────
+private const val JOOBLE_API_KEY = "cf24cf32-cb25-4adf-9c87-e4080ac45014"
+private const val JOOBLE_BASE_URL = "https://jooble.org/api/$JOOBLE_API_KEY"
+
+// ─── Data Classes ──────────────────────────────────────────────────────────────
 data class Job(
     val title: String,
     val company: String,
     val salary: String,
     val tags: List<String>,
     val icon: String,
-    val category: String
+    val category: String,
+    val link: String = ""
 )
 
+// Maps a keyword-based filter to a relevant emoji icon
+private fun iconForKeyword(keyword: String): String = when {
+    keyword.contains("cozinha", ignoreCase = true) ||
+            keyword.contains("chef", ignoreCase = true)    -> "👨‍🍳"
+    keyword.contains("tech", ignoreCase = true) ||
+            keyword.contains("ti", ignoreCase = true) ||
+            keyword.contains("desenvolv", ignoreCase = true) -> "💻"
+    keyword.contains("loja", ignoreCase = true) ||
+            keyword.contains("vendas", ignoreCase = true)  -> "🏪"
+    keyword.contains("admin", ignoreCase = true)   -> "📋"
+    keyword.contains("saúde", ignoreCase = true) ||
+            keyword.contains("enferm", ignoreCase = true)  -> "🏥"
+    else                                           -> "💼"
+}
+
+// ─── Jooble API ────────────────────────────────────────────────────────────────
+/**
+ * Fetches jobs from the Jooble REST API.
+ *
+ * Jooble API reference:
+ *   POST https://jooble.org/api/{api-key}
+ *   Body (JSON): { "keywords": "...", "location": "...", "page": 1, "resultsOnPage": 10 }
+ *
+ * Response shape:
+ *   { "totalCount": 123, "jobs": [ { "title", "company", "salary", "location",
+ *                                     "type", "link", "snippet", "updated" }, … ] }
+ */
+suspend fun fetchJoobleJobs(
+    keywords: String = "",
+    location: String = "Brasil"
+): List<Job> = withContext(Dispatchers.IO) {
+    try {
+        val url = URL(JOOBLE_BASE_URL)
+        val connection = url.openConnection() as HttpURLConnection
+        connection.apply {
+            requestMethod        = "POST"
+            doOutput             = true
+            doInput              = true
+            connectTimeout       = 10_000
+            readTimeout          = 10_000
+            setRequestProperty("Content-Type", "application/json")
+        }
+
+        // Build request body
+        val requestBody = JSONObject().apply {
+            put("keywords",      keywords)
+            put("location",      location)
+            put("page",          1)
+            put("resultsOnPage", 10)
+        }
+
+        OutputStreamWriter(connection.outputStream).use { writer ->
+            writer.write(requestBody.toString())
+            writer.flush()
+        }
+
+        if (connection.responseCode != HttpURLConnection.HTTP_OK) return@withContext emptyList()
+
+        val responseText = connection.inputStream.bufferedReader().readText()
+        val responseJson = JSONObject(responseText)
+        val jobsArray    = responseJson.optJSONArray("jobs") ?: return@withContext emptyList()
+
+        (0 until jobsArray.length()).map { i ->
+            val item    = jobsArray.getJSONObject(i)
+            val title   = item.optString("title",   "Sem título")
+            val company = item.optString("company", "Empresa não informada")
+            val salary  = item.optString("salary",  "").let {
+                if (it.isBlank()) "A combinar" else it
+            }
+            val location = item.optString("location", "")
+            val type     = item.optString("type",     "")
+            val link     = item.optString("link",     "")
+
+            // Build display tags from available metadata
+            val tags = buildList {
+                if (type.isNotBlank())     add(type)
+                if (location.isNotBlank()) add(location.take(15))
+            }.take(2)
+
+            // Determine filter category from type string
+            val category = when {
+                type.contains("remote", ignoreCase = true) ||
+                        type.contains("remoto", ignoreCase = true)  -> "Remoto"
+                type.contains("CLT",    ignoreCase = true)  -> "CLT"
+                else                                        -> "Outras"
+            }
+
+            Job(
+                title    = title,
+                company  = company,
+                salary   = salary,
+                tags     = tags,
+                icon     = iconForKeyword(title),
+                category = category,
+                link     = link
+            )
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        emptyList()
+    }
+}
+
+// ─── Screens ───────────────────────────────────────────────────────────────────
 @Composable
 fun TelaHome(
     onNavigation: (String) -> Unit = {},
     onNavigateToCandidaturas: () -> Unit = {}
 ) {
-    var selectedFilter by remember { mutableStateOf("Todas") }
+    var selectedFilter  by remember { mutableStateOf("Todas") }
     var selectedNavItem by remember { mutableStateOf("Início") }
+
+    // ── API state ──────────────────────────────────────────────────────────────
+    var jobs        by remember { mutableStateOf<List<Job>>(emptyList()) }
+    var isLoading   by remember { mutableStateOf(true) }
+    var errorMsg    by remember { mutableStateOf<String?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val scope = rememberCoroutineScope()
+
+    // Fetch on first composition
+    LaunchedEffect(Unit) {
+        scope.launch {
+            isLoading = true
+            errorMsg  = null
+            val result = fetchJoobleJobs(keywords = searchQuery, location = "Brasil")
+            if (result.isEmpty()) {
+                errorMsg = "Nenhuma vaga encontrada. Verifique sua busca ou tente novamente."
+            }
+            jobs      = result
+            isLoading = false
+        }
+    }
 
     val filters = listOf("Todas", "Remoto", "CLT", "Sem experiência")
 
-    val jobs = listOf(
-        Job("Atendente de Loja", "Mercadão Brasil", "R$1.600", listOf("CLT", "Presencial", "PcD"), "🏪", "CLT"),
-        Job("Auxiliar Administrativo", "TechImpulso", "R$1.900", listOf("Remoto", "PJ"), "💻", "Remoto"),
-        Job("Auxiliar de Cozinha", "Restaurante Sabor", "R$1.412", listOf("CLT", "Migrante"), "👨‍🍳", "CLT")
-    )
+    val filteredJobs = if (selectedFilter == "Todas") jobs
+    else jobs.filter { it.category == selectedFilter }
 
     Scaffold(
         containerColor = DarkBackground,
         bottomBar = {
             BottomNavigationBar(
                 selectedItem = selectedNavItem,
-                onItemClick = { selectedNavItem = it },
+                onItemClick  = { selectedNavItem = it },
                 onNavigation = onNavigation
             )
         }
@@ -80,33 +214,108 @@ fun TelaHome(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Header
             item { HeaderSection() }
 
-            // Cards de Resumo
+            // Search bar
             item {
-                SummaryCardsSection(onNavigateToCandidaturas = onNavigateToCandidaturas)
-            }
-
-            item {
-                Text(
-                    text = "Vagas em destaque",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+                SearchBarSection(
+                    query        = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onSearch     = {
+                        scope.launch {
+                            isLoading = true
+                            errorMsg  = null
+                            val result = fetchJoobleJobs(keywords = searchQuery, location = "Brasil")
+                            jobs      = result
+                            isLoading = false
+                            if (result.isEmpty()) {
+                                errorMsg = "Nenhuma vaga encontrada para \"$searchQuery\"."
+                            }
+                        }
+                    }
                 )
             }
 
+            // Summary cards
+            item {
+                SummaryCardsSection(
+                    jobCount               = jobs.size,
+                    onNavigateToCandidaturas = onNavigateToCandidaturas
+                )
+            }
+
+            // Section title
+            item {
+                Text(
+                    text       = "Vagas em destaque",
+                    fontSize   = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color      = Color.White,
+                    modifier   = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+                )
+            }
+
+            // Filters
             item {
                 FiltersSection(
-                    filters = filters,
-                    selectedFilter = selectedFilter,
+                    filters          = filters,
+                    selectedFilter   = selectedFilter,
                     onFilterSelected = { selectedFilter = it }
                 )
             }
 
-            items(if (selectedFilter == "Todas") jobs else jobs.filter { it.category == selectedFilter }) { job ->
-                JobCard(job = job)
+            // ── Content area ───────────────────────────────────────────────────
+            when {
+                isLoading -> item {
+                    Box(
+                        modifier         = Modifier.fillMaxWidth().padding(40.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator(color = HighlightYellow)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text     = "Buscando vagas…",
+                                color    = GrayText,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+
+                errorMsg != null -> item {
+                    Box(
+                        modifier         = Modifier.fillMaxWidth().padding(40.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "⚠️", fontSize = 36.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text      = errorMsg!!,
+                                color     = GrayText,
+                                fontSize  = 13.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    }
+                }
+
+                filteredJobs.isEmpty() -> item {
+                    Box(
+                        modifier         = Modifier.fillMaxWidth().padding(40.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text    = "Nenhuma vaga para o filtro selecionado.",
+                            color   = GrayText,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+
+                else -> items(filteredJobs) { job -> JobCard(job = job) }
             }
 
             item { Spacer(modifier = Modifier.height(20.dp)) }
@@ -114,6 +323,52 @@ fun TelaHome(
     }
 }
 
+// ─── Search Bar ────────────────────────────────────────────────────────────────
+@Composable
+fun SearchBarSection(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedTextField(
+            value         = query,
+            onValueChange = onQueryChange,
+            placeholder   = { Text("Buscar vagas…", color = GrayText) },
+            singleLine    = true,
+            modifier      = Modifier.weight(1f),
+            shape         = RoundedCornerShape(14.dp),
+            colors        = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor   = HighlightYellow,
+                unfocusedBorderColor = CardBackground,
+                focusedTextColor     = Color.White,
+                unfocusedTextColor   = Color.White,
+                cursorColor          = HighlightYellow,
+                focusedContainerColor   = CardBackground,
+                unfocusedContainerColor = CardBackground
+            )
+        )
+        Button(
+            onClick = onSearch,
+            shape  = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = HighlightYellow)
+        ) {
+            Icon(
+                imageVector      = Icons.Default.Search,
+                contentDescription = "Buscar",
+                tint             = Color.Black
+            )
+        }
+    }
+}
+
+// ─── Header ────────────────────────────────────────────────────────────────────
 @Composable
 fun HeaderSection() {
     Box(
@@ -121,41 +376,37 @@ fun HeaderSection() {
             .fillMaxWidth()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF2C1810),
-                        Color(0xFF1a1a2e)
-                    )
+                    colors = listOf(Color(0xFF2C1810), Color(0xFF1a1a2e))
                 ),
                 shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
             .padding(horizontal = 24.dp, vertical = 32.dp)
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start,
-            modifier = Modifier.fillMaxWidth()
+            modifier              = Modifier.fillMaxWidth()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.logo_incluija),
+                painter            = painterResource(id = R.drawable.logo_incluija),
                 contentDescription = "Logo IncluiJá",
-                modifier = Modifier.size(60.dp)
+                modifier           = Modifier.size(60.dp)
             )
-
             Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
-                    text = "INCLUIJÁ",
+                    text  = "INCLUIJÁ",
                     style = TextStyle(
-                        brush = horizontalGradient,
-                        fontSize = 28.sp,
+                        brush      = horizontalGradient,
+                        fontSize   = 28.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
                 )
                 Text(
-                    text = "SEU FUTURO COMEÇA AQUI",
-                    fontSize = 10.sp,
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontWeight = FontWeight.Bold,
+                    text          = "SEU FUTURO COMEÇA AQUI",
+                    fontSize      = 10.sp,
+                    color         = Color.White.copy(alpha = 0.7f),
+                    fontWeight    = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
             }
@@ -163,31 +414,34 @@ fun HeaderSection() {
     }
 }
 
+// ─── Summary Cards ─────────────────────────────────────────────────────────────
 @Composable
-fun SummaryCardsSection(onNavigateToCandidaturas: () -> Unit = {}) {
+fun SummaryCardsSection(
+    jobCount: Int,
+    onNavigateToCandidaturas: () -> Unit = {}
+) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 20.dp),
+        modifier              = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         SummaryCard(
-            icon = "📊",
-            number = "1.240",
-            label = "Vagas abertas hoje",
-            isGradient = false,
+            icon            = "📊",
+            number          = if (jobCount > 0) jobCount.toString() else "…",
+            label           = "Vagas encontradas",
+            isGradient      = false,
             backgroundColor = CardBackground,
-            textColor = HighlightYellow,
-            modifier = Modifier.weight(1f)
+            textColor       = HighlightYellow,
+            modifier        = Modifier.weight(1f)
         )
-
         SummaryCard(
-            icon = "🎯",
-            number = " 3",
-            label = "Minhas candidaturas",
-            isGradient = false,
+            icon            = "🎯",
+            number          = "3",
+            label           = "Minhas candidaturas",
+            isGradient      = false,
             backgroundColor = CardBackground,
-            textColor = HighlightYellow,
-            modifier = Modifier.weight(1f),
-            onClick = onNavigateToCandidaturas
+            textColor       = HighlightYellow,
+            modifier        = Modifier.weight(1f),
+            onClick         = onNavigateToCandidaturas
         )
     }
 }
@@ -204,146 +458,159 @@ fun SummaryCard(
     onClick: () -> Unit = {}
 ) {
     Card(
-        modifier = modifier
-            .height(140.dp)
-            .clickable(enabled = true) { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
+        modifier  = modifier.height(140.dp).clickable { onClick() },
+        shape     = RoundedCornerShape(20.dp),
+        colors    = CardDefaults.cardColors(
             containerColor = if (isGradient) Color.Transparent else backgroundColor
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        )
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .then(
-                    if (isGradient) {
-                        Modifier.background(
-                            brush = horizontalGradient,
-                            shape = RoundedCornerShape(20.dp)
-                        )
-                    } else {
-                        Modifier
-                    }
-                )
+            modifier = Modifier.fillMaxSize().then(
+                if (isGradient) Modifier.background(brush = horizontalGradient, shape = RoundedCornerShape(20.dp))
+                else Modifier
+            )
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
+                modifier            = Modifier.fillMaxSize().padding(16.dp),
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(text = icon, fontSize = 32.sp)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = number,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isGradient) Color.White else textColor
-                )
-                Text(
-                    text = label,
-                    fontSize = 12.sp,
-                    color = (if (isGradient) Color.White else textColor).copy(alpha = 0.8f)
-                )
+                Text(text = number, fontSize = 24.sp, fontWeight = FontWeight.Bold,
+                    color = if (isGradient) Color.White else textColor)
+                Text(text = label, fontSize = 12.sp,
+                    color = (if (isGradient) Color.White else textColor).copy(alpha = 0.8f))
             }
         }
     }
 }
 
+// ─── Filters ───────────────────────────────────────────────────────────────────
 @Composable
-fun FiltersSection(filters: List<String>, selectedFilter: String, onFilterSelected: (String) -> Unit) {
+fun FiltersSection(
+    filters: List<String>,
+    selectedFilter: String,
+    onFilterSelected: (String) -> Unit
+) {
     LazyRow(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+        modifier              = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         items(filters) { filter ->
             val isSelected = filter == selectedFilter
             Surface(
                 onClick = { onFilterSelected(filter) },
-                shape = RoundedCornerShape(16.dp),
-                color = if (isSelected) HighlightYellow else CardBackground,
-                modifier = Modifier
+                shape   = RoundedCornerShape(16.dp),
+                color   = if (isSelected) HighlightYellow else CardBackground
             ) {
                 Text(
-                    text = filter,
-                    color = if (isSelected) Color.Black else Color.White,
-                    fontSize = 13.sp,
+                    text       = filter,
+                    color      = if (isSelected) Color.Black else Color.White,
+                    fontSize   = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    modifier   = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                 )
             }
         }
     }
 }
 
+// ─── Job Card ──────────────────────────────────────────────────────────────────
 @Composable
 fun JobCard(job: Job) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        shape    = RoundedCornerShape(20.dp),
+        colors   = CardDefaults.cardColors(containerColor = CardBackground)
     ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(50.dp).clip(CircleShape).background(Color(0xFF252538)), contentAlignment = Alignment.Center) {
+        Row(
+            modifier          = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier         = Modifier.size(50.dp).clip(CircleShape).background(Color(0xFF252538)),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(text = job.icon, fontSize = 24.sp)
             }
+
             Spacer(modifier = Modifier.width(16.dp))
+
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = job.title, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(text = job.title,   fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 Text(text = job.company, fontSize = 13.sp, color = GrayText)
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     job.tags.take(2).forEach { tag ->
-                        Surface(
-                            shape = RoundedCornerShape(8.dp), 
-                            color = HighlightYellow 
-                        ) {
+                        Surface(shape = RoundedCornerShape(8.dp), color = HighlightYellow) {
                             Text(
-                                text = tag, 
-                                fontSize = 10.sp, 
-                                fontWeight = FontWeight.ExtraBold, 
-                                color = Color.Black, 
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                text       = tag,
+                                fontSize   = 10.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color      = Color.Black,
+                                modifier   = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }
                     }
                 }
             }
-            Text(text = job.salary, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+
+            Text(
+                text       = job.salary,
+                fontSize   = 15.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color      = Color.White
+            )
         }
     }
 }
 
+// ─── Bottom Nav ────────────────────────────────────────────────────────────────
 @Composable
-fun BottomNavigationBar(selectedItem: String, onItemClick: (String) -> Unit, onNavigation: (String) -> Unit) {
+fun BottomNavigationBar(
+    selectedItem: String,
+    onItemClick: (String) -> Unit,
+    onNavigation: (String) -> Unit
+) {
     Surface(color = CardBackground, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)) {
-        Row(modifier = Modifier.fillMaxWidth().height(70.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier              = Modifier.fillMaxWidth().height(70.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment     = Alignment.CenterVertically
+        ) {
             val navItems = listOf(
                 Pair("Início", Icons.Default.Home),
-                Pair("Buscar", Icons.Default.Search),
-                Pair("Vagas", Icons.Default.Favorite),
-                Pair("Perfil", Icons.Default.Person)
+                Pair("Buscar",  Icons.Default.Search),
+                Pair("Vagas",   Icons.Default.Favorite),
+                Pair("Perfil",  Icons.Default.Person)
             )
             navItems.forEach { (label, icon) ->
                 val isSelected = selectedItem == label
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable { 
+                    modifier            = Modifier.clickable {
                         onItemClick(label)
                         if (label == "Perfil") onNavigation("perfil")
                     }
                 ) {
-                    Icon(imageVector = icon, contentDescription = label, tint = if (isSelected) HighlightYellow else GrayText)
-                    Text(text = label, fontSize = 11.sp, color = if (isSelected) HighlightYellow else GrayText)
+                    Icon(
+                        imageVector      = icon,
+                        contentDescription = label,
+                        tint             = if (isSelected) HighlightYellow else GrayText
+                    )
+                    Text(
+                        text     = label,
+                        fontSize = 11.sp,
+                        color    = if (isSelected) HighlightYellow else GrayText
+                    )
                 }
             }
         }
     }
 }
 
+// ─── Preview ───────────────────────────────────────────────────────────────────
 @Preview(showBackground = true)
 @Composable
 fun TelaHomePreview() {
